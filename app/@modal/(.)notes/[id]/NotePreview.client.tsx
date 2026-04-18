@@ -16,6 +16,7 @@ export default function NotePreviewClient() {
     queryFn: () => fetchNoteById(id),
     enabled: Boolean(id),
     staleTime: 60 * 1000,
+    refetchOnMount: false
   });
 
   const handleClose = (): void => {
