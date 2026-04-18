@@ -1,8 +1,11 @@
-import Modal from '@/components/Modal/Modal';
-import NotePreview from './NotePreview.client';
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from '@tanstack/react-query';
 import { fetchNoteById } from '@/lib/api';
+import NotePreviewClient from './NotePreview.client';
 
-//тип пропсів для сторінки: params — це Promise, який повертає об’єкт із id нотатки.
 interface NotePreviewPageProps {
   params: Promise<{ id: string }>;
 }
@@ -10,14 +13,24 @@ interface NotePreviewPageProps {
 export default async function NotePreviewPage({
   params,
 }: NotePreviewPageProps) {
-  //отримуємо id з параметрів і використовуємо його для отримання даних нотатки з API
   const { id } = await params;
 
-  const note = await fetchNoteById(id);
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+      },
+    },
+  });
+
+  await queryClient.prefetchQuery({
+    queryKey: ['note', id],
+    queryFn: () => fetchNoteById(id),
+  });
 
   return (
-    <Modal>
-      <NotePreview note={note} />
-    </Modal>
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <NotePreviewClient />
+    </HydrationBoundary>
   );
 }

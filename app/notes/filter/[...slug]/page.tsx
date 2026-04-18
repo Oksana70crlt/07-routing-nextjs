@@ -1,15 +1,24 @@
+import {
+  dehydrate,
+  HydrationBoundary,
+  QueryClient,
+} from '@tanstack/react-query';
 import { notFound } from 'next/navigation';
 import type { NoteTag } from '@/types/note';
+import { fetchNotes } from '@/lib/api';
 import NotesClient from './Notes.client';
+
+const PER_PAGE = 12;
 
 interface FilterNotesPageProps {
   params: Promise<{ slug: string[] }>;
 }
 
-async function FilterNotesPage({ params }: FilterNotesPageProps) {
+export default async function FilterNotesPage({
+  params,
+}: FilterNotesPageProps) {
   const { slug } = await params;
 
-  //перевіряємо, що slug існує і має довжину 1 (тобто один тег або 'all')
   if (!slug || slug.length !== 1) {
     notFound();
   }
@@ -17,7 +26,28 @@ async function FilterNotesPage({ params }: FilterNotesPageProps) {
   const rawTag = decodeURIComponent(slug[0]);
   const tag = rawTag === 'all' ? undefined : (rawTag as NoteTag);
 
-  return <NotesClient key={tag ?? 'all'} tag={tag} />;
-}
+  const queryClient = new QueryClient({
+    defaultOptions: {
+      queries: {
+        staleTime: 60 * 1000,
+      },
+    },
+  });
 
-export default FilterNotesPage;
+  await queryClient.prefetchQuery({
+    queryKey: ['notes', 1, '', tag],
+    queryFn: () =>
+      fetchNotes({
+        page: 1,
+        perPage: PER_PAGE,
+        search: '',
+        tag,
+      }),
+  });
+
+  return (
+    <HydrationBoundary state={dehydrate(queryClient)}>
+      <NotesClient key={tag ?? 'all'} tag={tag} />
+    </HydrationBoundary>
+  );
+}
