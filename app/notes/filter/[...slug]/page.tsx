@@ -1,6 +1,6 @@
 import { notFound } from 'next/navigation';
 import type { NoteTag } from '@/types/note';
-import NotesClient from '../../Notes.client';
+import NotesClient from './Notes.client';
 
 interface FilterNotesPageProps {
   params: Promise<{ slug: string[] }>;

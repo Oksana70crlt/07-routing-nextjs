@@ -1,6 +1,6 @@
 import Modal from '@/components/Modal/Modal';
-import NotePreview from '@/components/NotePreview/NotePreview';
-import { fetchNoteById } from '@/lib/api/fetchNoteById';
+import NotePreview from './NotePreview.client';
+import { fetchNoteById } from '@/lib/api';
 
 //тип пропсів для сторінки: params — це Promise, який повертає об’єкт із id нотатки.
 interface NotePreviewPageProps {
